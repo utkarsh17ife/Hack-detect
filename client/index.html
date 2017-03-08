@@ -79,7 +79,6 @@
                 var promise = fileUpload.uploadFileToUrl(file, uploadUrl);
                 promise.then(function(res){
                     $scope.error = res.data;
-                    $scope.myFile = '';
                 })
             }else{
                 $scope.error = "Please select a file!";

@@ -50,7 +50,6 @@ app.get('/processLog' , function(req, res){
         res.end("Message from server: Please upload the file!");
     }else{
         check.hackCheck(function(arr){
-        
         var finalString = '';
         var rawDataArray = fs.readFileSync(path.join(__dirname, './uploads/log')).toString().split('\r\n');
         arr.forEach(function(line){
