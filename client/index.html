@@ -1,0 +1,102 @@
+<html ng-app="myApp">
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <script
+            src="https://code.jquery.com/jquery-1.12.4.min.js"
+            integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="
+            crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    </head>
+<body>
+    <div ng-controller = "myCtrl" style="height:70%">
+        <table class="table table-condensed">
+            <tr>
+                <td>
+                    <input type = "file" file-model = "myFile" /><br>
+                    <button class="btn btn-primary" ng-click = "uploadFile()">Upload File</button>&nbsp&nbsp&nbsp&nbsp&nbsp
+                    <button class="btn btn-secondary" ng-click = "processFile()">Process File</button>        
+                </td>
+            </tr>
+        </table>
+        <p>{{error}}</p>
+    </div>
+    <div style="height:30%">
+        <h4>The Application looks for hack attempts in the logs</h4>
+        <h5>Sample logs:</h5>
+        Not a hack log:
+        <p style="color:green;">"POST https://abc.com:443 HTTP/1.1" "faasos.com" AES128-SHA TLSv1 2016-09-29T23:46:37.439243Z Prod-API 183.87.18.119:12766 127.0.0.1:4000 1 0.000046 0.00216 0.000033 200 200 0 17</p><br>
+        Hack log as ORIGIN_HEADER is : MATLAB R2013a
+        <p style="color:red;">"GET https://kpi.xyz.com:443 HTTP/1.1" "MATLAB R2013a" AES128-SHA TLSv1 2016-09-29T23:45:37.43243Z Prod-API 183.87.18.119:12766 127.0.0.1:3000 1 0.000046 0.00216 0.000033 200 200 0 17</p><br>
+        Hack log as CLIENT_IP is non IN
+        <p style="color:red;">"GET https://a.com:443 HTTP/1.1" "faasos.com" AES128-SHA TLSv1 2016-09-29T23:47:38.139243Z Prod-API 207.97.227.239:12766 127.0.0.1:5000 1 0.000046 0.00216 0.000033 200 200 0 17</p><br>
+    </div>
+</body>
+</html>
+ 
+<script src="angular.min.js"></script>
+  <script>
+     var myApp = angular.module('myApp', []);
+ 
+     myApp.directive('fileModel', ['$parse', function ($parse) {
+        return {
+           restrict: 'A',
+           link: function(scope, element, attrs) {
+              var model = $parse(attrs.fileModel);
+              var modelSetter = model.assign;
+ 
+              element.bind('change', function(){
+                 scope.$apply(function(){
+                    modelSetter(scope, element[0].files[0]);
+                 });
+              });
+           }
+        };
+     }]);
+ 
+     myApp.service('fileUpload', ['$http', function ($http) {
+        this.uploadFileToUrl = function(file, uploadUrl){
+           var fd = new FormData();
+
+           fd.append('file', file);
+           
+           console.log('file to be uploaded');
+
+           return $http.post(uploadUrl, fd, {
+              transformRequest: angular.identity,
+              headers: {'Content-Type': undefined }
+           })
+ 
+        }
+     }]);
+ 
+     myApp.controller('myCtrl', ['$scope', 'fileUpload','$http', function($scope, fileUpload, $http){
+        $scope.uploadFile = function(){
+           $scope.error = "";
+           var file = $scope.myFile;
+           var uploadUrl = "/logUpload";
+           if(file){
+                var promise = fileUpload.uploadFileToUrl(file, uploadUrl);
+                promise.then(function(res){
+                    $scope.error = res.data;
+                    $scope.myFile = '';
+                })
+            }else{
+                $scope.error = "Please select a file!";
+            }
+        };
+        $scope.processFile = function(){
+            var promise = $http.get('/processLog');
+            promise.then(function(res){
+                $scope.error = res.data;
+                if(!res.data){
+                    $scope.error = "phhhheeeeewwwwww! no one is trying to hack, so lets chill!";
+                }
+            });
+        }
+
+
+
+     }]);
+ 
+  </script>
